@@ -50,7 +50,7 @@ for value in invalidRequests {
     }
 }
 
-let (hiddenKeyDown, hiddenKeyUp) = try HiddenFilesService.makeShortcut()
+let (hiddenKeyDown, hiddenKeyUp) = try FinderShortcutService.makeShortcut(for: .toggleHiddenFiles)
 try expect(hiddenKeyDown.type == .keyDown && hiddenKeyUp.type == .keyUp,
            "Hidden files shortcut has a balanced key down and key up")
 try expect(hiddenKeyDown.getIntegerValueField(.keyboardEventKeycode) == 47
@@ -60,26 +60,48 @@ try expect(hiddenKeyDown.flags == [.maskCommand, .maskShift]
            && hiddenKeyUp.flags == [.maskCommand, .maskShift],
            "Hidden files shortcut uses only Command and Shift modifiers")
 do {
-    _ = try HiddenFilesService.targetProcess(hasAccess: false, application: nil)
+    _ = try FinderShortcutService.targetProcess(hasAccess: false, application: nil)
     fatalError("FAIL: Missing event access must stop the shortcut")
-} catch HiddenFilesError.accessRequired {
+} catch FinderShortcutError.accessRequired {
     try expect(true, "Missing event access stops before choosing a target")
 }
 for application in [nil, NSRunningApplication.current] {
     do {
-        _ = try HiddenFilesService.targetProcess(hasAccess: true, application: application)
+        _ = try FinderShortcutService.targetProcess(hasAccess: true, application: application)
         fatalError("FAIL: A missing or non-Finder target must stop the shortcut")
-    } catch HiddenFilesError.finderNotActive {
+    } catch FinderShortcutError.finderNotActive {
         try expect(true, "A missing or non-Finder target stops the shortcut")
     }
 }
 if let finder = NSRunningApplication.runningApplications(withBundleIdentifier: "com.apple.finder").first {
-    try expect(try HiddenFilesService.targetProcess(hasAccess: true, application: finder) == finder.processIdentifier,
-               "Hidden files shortcut targets only the validated Finder process")
+    try expect(try FinderShortcutService.targetProcess(hasAccess: true, application: finder) == finder.processIdentifier,
+               "Finder shortcuts target only the validated Finder process")
 }
 expectFailure("Hidden files toggle cannot be treated as a file type") {
     _ = try TemplateCreator.create(.toggleHiddenFiles, in: directory, templates: templates)
 }
+
+let (folderKeyDown, folderKeyUp) = try FinderShortcutService.makeShortcut(for: .goToFolder)
+try expect(NSImage(systemSymbolName: MenuAction.goToFolder.symbol, accessibilityDescription: MenuAction.goToFolder.title) != nil,
+           "Path search menu icon can be loaded by AppKit")
+try expect(folderKeyDown.type == .keyDown && folderKeyUp.type == .keyUp,
+           "Go to folder shortcut has a balanced key down and key up")
+try expect(folderKeyDown.getIntegerValueField(.keyboardEventKeycode) == 5
+           && folderKeyUp.getIntegerValueField(.keyboardEventKeycode) == 5,
+           "Go to folder shortcut uses the G key")
+try expect(folderKeyDown.flags == [.maskCommand, .maskShift]
+           && folderKeyUp.flags == [.maskCommand, .maskShift],
+           "Go to folder shortcut uses only Command and Shift modifiers")
+for action in [MenuAction.terminal, .newText, .newMarkdown] {
+    expectFailure("Reject non-shortcut action: \(action.rawValue)") {
+        _ = try FinderShortcutService.makeShortcut(for: action)
+    }
+}
+expectFailure("Go to folder cannot be treated as a file type") {
+    _ = try TemplateCreator.create(.goToFolder, in: directory, templates: templates)
+}
+try expect(FinderShortcutError.accessRequired.localizedDescription.contains("系统设置 → 隐私与安全性 → 设备控制和数据访问"),
+           "Both Finder shortcuts use the current permission settings path")
 
 let existing = directory.appendingPathComponent("新建文件.txt")
 let original = Data("保留已有内容".utf8)

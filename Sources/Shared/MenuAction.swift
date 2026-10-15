@@ -5,6 +5,7 @@ enum MenuAction: String, CaseIterable {
     case newText
     case newMarkdown
     case toggleHiddenFiles
+    case goToFolder
 
     var title: String {
         switch self {
@@ -12,6 +13,7 @@ enum MenuAction: String, CaseIterable {
         case .newText: return "新建 TXT 文件"
         case .newMarkdown: return "新建 Markdown 文件"
         case .toggleHiddenFiles: return "显示／隐藏隐藏文件"
+        case .goToFolder: return "路径搜索…"
         }
     }
 
@@ -20,15 +22,20 @@ enum MenuAction: String, CaseIterable {
         case .terminal: return "terminal"
         case .newText, .newMarkdown: return "doc.badge.plus"
         case .toggleHiddenFiles: return "eye"
+        case .goToFolder: return "magnifyingglass"
         }
     }
 
     var fileExtension: String? {
         switch self {
-        case .terminal, .toggleHiddenFiles: return nil
+        case .terminal, .toggleHiddenFiles, .goToFolder: return nil
         case .newText: return "txt"
         case .newMarkdown: return "md"
         }
+    }
+
+    var requiresActiveFinder: Bool {
+        self == .toggleHiddenFiles || self == .goToFolder
     }
 }
 

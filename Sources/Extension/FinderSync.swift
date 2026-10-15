@@ -132,13 +132,13 @@ final class FinderMenuSync: FIFinderSync {
             logger.error("No request for Finder menu tag \(sender.tag)")
             return
         }
-        if (try? ActionRequest(url: url).action) == .toggleHiddenFiles {
+        if (try? ActionRequest(url: url).action.requiresActiveFinder) == true {
             let configuration = NSWorkspace.OpenConfiguration()
             configuration.activates = false
             let logger = logger
             NSWorkspace.shared.open(url, configuration: configuration) { _, error in
                 if let error {
-                    logger.error("FinderMenu could not open the hidden files action: \(error.localizedDescription, privacy: .public)")
+                    logger.error("FinderMenu could not open the Finder shortcut action: \(error.localizedDescription, privacy: .public)")
                 }
             }
             return
