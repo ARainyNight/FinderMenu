@@ -204,6 +204,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
                 button = ShortcutButton(title: "新建 TXT", detail: "写下一点想法", symbol: "doc.text", tint: .systemBlue)
             case .newMarkdown:
                 button = ShortcutButton(title: "新建 Markdown", detail: "让灵感有格式", symbol: "text.badge.plus", tint: .systemOrange)
+            case .toggleHiddenFiles:
+                continue
             }
             button.target = self
             button.action = #selector(runAction(_:))
@@ -326,6 +328,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     }
 
     private func execute(_ request: ActionRequest) throws {
+        if request.action == .toggleHiddenFiles {
+            try HiddenFilesService.toggle()
+            return
+        }
         let folder = try DirectoryResolver.validate(request.directory)
         if request.action == .terminal {
             try TerminalService.open(in: folder)

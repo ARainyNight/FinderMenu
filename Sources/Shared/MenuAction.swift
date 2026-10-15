@@ -4,22 +4,28 @@ enum MenuAction: String, CaseIterable {
     case terminal
     case newText
     case newMarkdown
+    case toggleHiddenFiles
 
     var title: String {
         switch self {
         case .terminal: return "进入终端"
         case .newText: return "新建 TXT 文件"
         case .newMarkdown: return "新建 Markdown 文件"
+        case .toggleHiddenFiles: return "显示／隐藏隐藏文件"
         }
     }
 
     var symbol: String {
-        self == .terminal ? "terminal" : "doc.badge.plus"
+        switch self {
+        case .terminal: return "terminal"
+        case .newText, .newMarkdown: return "doc.badge.plus"
+        case .toggleHiddenFiles: return "eye"
+        }
     }
 
     var fileExtension: String? {
         switch self {
-        case .terminal: return nil
+        case .terminal, .toggleHiddenFiles: return nil
         case .newText: return "txt"
         case .newMarkdown: return "md"
         }

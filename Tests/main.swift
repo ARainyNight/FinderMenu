@@ -50,6 +50,37 @@ for value in invalidRequests {
     }
 }
 
+let (hiddenKeyDown, hiddenKeyUp) = try HiddenFilesService.makeShortcut()
+try expect(hiddenKeyDown.type == .keyDown && hiddenKeyUp.type == .keyUp,
+           "Hidden files shortcut has a balanced key down and key up")
+try expect(hiddenKeyDown.getIntegerValueField(.keyboardEventKeycode) == 47
+           && hiddenKeyUp.getIntegerValueField(.keyboardEventKeycode) == 47,
+           "Hidden files shortcut uses the period key")
+try expect(hiddenKeyDown.flags == [.maskCommand, .maskShift]
+           && hiddenKeyUp.flags == [.maskCommand, .maskShift],
+           "Hidden files shortcut uses only Command and Shift modifiers")
+do {
+    _ = try HiddenFilesService.targetProcess(hasAccess: false, application: nil)
+    fatalError("FAIL: Missing event access must stop the shortcut")
+} catch HiddenFilesError.accessRequired {
+    try expect(true, "Missing event access stops before choosing a target")
+}
+for application in [nil, NSRunningApplication.current] {
+    do {
+        _ = try HiddenFilesService.targetProcess(hasAccess: true, application: application)
+        fatalError("FAIL: A missing or non-Finder target must stop the shortcut")
+    } catch HiddenFilesError.finderNotActive {
+        try expect(true, "A missing or non-Finder target stops the shortcut")
+    }
+}
+if let finder = NSRunningApplication.runningApplications(withBundleIdentifier: "com.apple.finder").first {
+    try expect(try HiddenFilesService.targetProcess(hasAccess: true, application: finder) == finder.processIdentifier,
+               "Hidden files shortcut targets only the validated Finder process")
+}
+expectFailure("Hidden files toggle cannot be treated as a file type") {
+    _ = try TemplateCreator.create(.toggleHiddenFiles, in: directory, templates: templates)
+}
+
 let existing = directory.appendingPathComponent("新建文件.txt")
 let original = Data("保留已有内容".utf8)
 try original.write(to: existing, options: .withoutOverwriting)

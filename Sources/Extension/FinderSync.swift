@@ -54,7 +54,7 @@ final class FinderMenuSync: FIFinderSync {
             item.image = NSImage(systemSymbolName: action.symbol, accessibilityDescription: action.title)
             item.tag = index + 1
             requests[item.tag] = ActionRequest(action: action, directory: directory).url
-            if action == .terminal {
+            if action.fileExtension == nil {
                 menu.addItem(item)
             } else {
                 newFileMenu.addItem(item)
@@ -130,6 +130,17 @@ final class FinderMenuSync: FIFinderSync {
     @objc private func performAction(_ sender: NSMenuItem) {
         guard let url = requests[sender.tag] else {
             logger.error("No request for Finder menu tag \(sender.tag)")
+            return
+        }
+        if (try? ActionRequest(url: url).action) == .toggleHiddenFiles {
+            let configuration = NSWorkspace.OpenConfiguration()
+            configuration.activates = false
+            let logger = logger
+            NSWorkspace.shared.open(url, configuration: configuration) { _, error in
+                if let error {
+                    logger.error("FinderMenu could not open the hidden files action: \(error.localizedDescription, privacy: .public)")
+                }
+            }
             return
         }
         if !NSWorkspace.shared.open(url) {

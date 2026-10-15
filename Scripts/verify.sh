@@ -4,7 +4,8 @@ set -euo pipefail
 PROJECT_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 mkdir -p "$PROJECT_ROOT/work/module-cache"
 xcrun swiftc -swift-version 6 -module-cache-path "$PROJECT_ROOT/work/module-cache" \
-    "$PROJECT_ROOT"/Sources/Shared/*.swift "$PROJECT_ROOT/Tests/main.swift" \
+    "$PROJECT_ROOT"/Sources/Shared/*.swift "$PROJECT_ROOT/Sources/App/HiddenFilesService.swift" \
+    "$PROJECT_ROOT/Tests/main.swift" \
     -framework AppKit -o "$PROJECT_ROOT/work/behavior-tests"
 "$PROJECT_ROOT/work/behavior-tests" "$PROJECT_ROOT"
 
