@@ -1,0 +1,13 @@
+build/
+work/
+.build/
+node_modules/
+dist/
+.env*
+.DS_Store
+.idea/
+.vscode/
+*.xcuserstate
+xcuserdata/
+.codex/
+.claude/
